@@ -1,8 +1,4 @@
-const { exec } = require('child_process');
-const util = require('util');
-
-// Promisify exec to use with async/await
-const execPromise = util.promisify(exec);
+const ytdl = require('ytdl-core');
 
 module.exports = async (req, res) => {
     const { url } = req.query;
@@ -11,17 +7,16 @@ module.exports = async (req, res) => {
         return res.status(400).send('YouTube URL is required');
     }
 
-    // Command to download video using yt-dlp
-    const command = `yt-dlp -o - ${url}`;
     try {
-        const { stdout, stderr } = await execPromise(command, { encoding: 'binary' });
-        if (stderr) {
-            console.error(`Error: ${stderr}`);
-            return res.status(500).send('Error downloading video');
-        }
         res.setHeader('Content-Disposition', 'attachment; filename="video.mp4"');
         res.setHeader('Content-Type', 'video/mp4');
-        res.send(stdout);
+
+        ytdl(url, { filter: 'audioandvideo', quality: 'highest' })
+            .pipe(res)
+            .on('error', (err) => {
+                console.error(`Error: ${err.message}`);
+                res.status(500).send('Error downloading video');
+            });
     } catch (error) {
         console.error(`Error: ${error.message}`);
         res.status(500).send('Error downloading video');
