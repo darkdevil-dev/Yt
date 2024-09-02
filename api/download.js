@@ -11,6 +11,7 @@ module.exports = async (req, res) => {
         res.setHeader('Content-Disposition', 'attachment; filename="video.mp4"');
         res.setHeader('Content-Type', 'video/mp4');
 
+        // Using ytdl-core to download video
         ytdl(url, { filter: 'audioandvideo', quality: 'highest' })
             .pipe(res)
             .on('error', (err) => {
